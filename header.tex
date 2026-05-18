@@ -1,31 +1,33 @@
 \usepackage{tcolorbox}
-\tcbuselibrary{breakable} % 載入 breakable 函式庫以允許程式碼區塊跨頁折行
-\usepackage{fancyvrb}
+\tcbuselibrary{breakable} % Load breakable library to allow code blocks to span across pages
+\usepackage{fvextra}      % Use fvextra (extension of fancyvrb) for advanced verbatim features including line breaking
 \usepackage{xcolor}
 
-% 1. 重新定義 Shaded 環境：為程式碼區塊加上背景色與灰色圓角邊框 (就像 md 的 ```)
+% 1. Redefine Shaded environment: add background color and gray rounded border for code blocks (similar to md's ```)
 \renewenvironment{Shaded}{
   \begin{tcolorbox}[
-    colback=gray!6,           % 淺灰色背景
-    colframe=gray!30,          % 邊框顏色
-    arc=3pt,                   % 圓角半徑
-    boxrule=0.5pt,             % 邊框粗細
-    left=5pt, right=5pt, top=5pt, bottom=5pt, % 內部留白
+    colback=gray!6,           % Light gray background
+    colframe=gray!30,          % Border color
+    arc=3pt,                   % Corner radius
+    boxrule=0.5pt,             % Border thickness
+    left=5pt, right=5pt, top=5pt, bottom=5pt, % Padding / Inner margins
     boxsep=0pt,
-    breakable                  % 允許跨頁折行
+    breakable                  % Allow page breaking
   ]
 }{
   \end{tcolorbox}
 }
 
-% 2. 重新定義 Highlighting 環境：全域設定為等寬字型並顯示行號
+% 2. Redefine Highlighting environment: set to monospaced font globally, show line numbers, and enable automatic line wrapping
 \DefineVerbatimEnvironment{Highlighting}{Verbatim}{
   commandchars=\\\{\},
-  numbers=left,                % 顯示行號在左側
-  numbersep=8pt,               % 行號與程式碼的間距
-  fontsize=\small,             % 字型大小
-  fontfamily=tt                % 使用等寬字型
+  numbers=left,                % Show line numbers on the left
+  numbersep=8pt,               % Distance between line numbers and code
+  fontsize=\small,             % Font size
+  fontfamily=tt,               % Use monospaced font
+  breaklines=true,             % Automatically wrap long lines of code!
+  breakanywhere=true           % Allow line breaks anywhere if a line is too long
 }
 
-% 3. 自訂行號格式：使其呈現小字（\tiny）與優雅的灰色（gray）
+% 3. Custom line number format: set to tiny and elegant gray
 \renewcommand{\theFancyVerbLine}{\tiny\color{gray}\arabic{FancyVerbLine}}
