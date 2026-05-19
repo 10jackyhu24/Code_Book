@@ -7,7 +7,7 @@ This codebook contains commonly used algorithms and utilities optimized for comp
 ## 1. Basic Utilities
 
 ### IO Speedup (cin, cout)
-Accelerates C++ standard input/output operations. Avoid mixing `cin/cout` with `scanf/printf` after execution.
+> Accelerates C++ standard input/output operations. Avoid mixing `cin/cout` with `scanf/printf` after execution.
 
 ```cpp
 #include <iostream>
@@ -21,7 +21,7 @@ void speedup() {
 ```
 
 ### Greatest Common Divisor (GCD)
-Calculates the greatest common divisor of two integers using the Euclidean algorithm.
+> Calculates the greatest common divisor of two integers using the Euclidean algorithm.
 
 ```cpp
 int GCD(int num1, int num2) {
@@ -31,7 +31,7 @@ int GCD(int num1, int num2) {
 ```
 
 ### Least Common Multiple (LCM)
-Calculates the least common multiple of two integers.
+> Calculates the least common multiple of two integers.
 
 ```cpp
 int LCM(int num1, int num2) {
@@ -323,5 +323,87 @@ pair<Point, Point> findClosestPair(vector<Point>& points) {
     pair<Point, Point> bestPair;
     closestUtil(pointsSortedByX, 0, pointsSortedByX.size() - 1, bestPair);
     return bestPair;
+}
+```
+
+## 5. Math
+
+### Euler Totient Function (歐拉函數)
+> **Description:** Calculates Euler's totient function $\phi(x)$, which counts the number of positive integers strictly less than $x$ that are coprime to $x$.
+> **Time Complexity:** $O(\sqrt{x})$  
+> **Space Complexity:** $O(1)$
+> **Usage:** Commonly used in number theory, particularly for finding modular multiplicative inverses and applying Euler's theorem.
+
+```cpp
+#include <cmath>
+
+int Phi(int x) {
+    if (x < 2) return 0;
+    int ret = x;
+    int sq = sqrt(x);
+    for (int p = 2; p <= sq; p++) {
+        if (x % p == 0) {
+            while (x % p == 0) x /= p;
+            ret -= ret / p;
+        }
+        if (x == 1) break;
+    }
+    if (x > 1) ret -= ret / x;
+    return ret;
+}
+```
+
+## 6. Range Queries
+
+### Difference Array
+> **Description:** Efficiently applies multiple range addition updates $[L, R]$ by modifying only the boundaries of a difference array. A prefix sum is then used to reconstruct the final array values.
+> **Returns:** The minimum coverage value across all positions after applying all updates.
+> **Time Complexity:** $O(M + N)$ where $M$ is the number of updates and $N$ is the array size.
+> **Space Complexity:** $O(N)$ for the difference array.
+> **Usage:** Ideal for scenarios requiring many range updates followed by a single full-array query or state evaluation.
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <climits>
+
+using namespace std;
+
+long long differenceArray() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+    
+    long long N, M;
+    if (!(cin >> N >> M)) return -1;
+    
+    // Size N+2 to prevent R+1 from exceeding boundary
+    vector<long long> diff(N + 2, 0LL);
+    
+    // Read interval [L, R] for each turret
+    for (int i = 0; i < M; i++) {
+        long long L, R;
+        cin >> L >> R;
+        // Difference array update: +1 at start L, -1 at position after end R+1
+        diff[L] += 1;
+        if (R + 1 <= N) {
+            diff[R + 1] -= 1;
+        }
+    }
+    
+    // Compute prefix-sum directly on diff array and track the minimum value
+    long long cover = 0;          // Current cumulative coverage at the current position
+    long long answer = LLONG_MAX; // Stores the minimum coverage value
+    
+    for (int pos = 1; pos <= N; pos++) {
+        cover += diff[pos]; // diff[pos] indicates the change in coverage at pos
+        // cover represents the actual coverage count at pos
+        if (cover < answer) {
+            answer = cover;
+        }
+    }
+    
+    // Under normal circumstances, answer is at least 0.
+    // Return the answer.
+    return answer;
 }
 ```
