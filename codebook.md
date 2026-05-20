@@ -428,7 +428,7 @@ long long getPermutationRank(vector<int> nums, long long MOD = 1000000007) {
 
 ## 6. Math
 
-### Euler Totient Function (歐拉函數)
+### Euler Totient Function
 > **Description:** Calculates Euler's totient function $\phi(x)$, which counts the number of positive integers strictly less than $x$ that are coprime to $x$.
 > **Time Complexity:** $O(\sqrt{x})$  
 > **Space Complexity:** $O(1)$
