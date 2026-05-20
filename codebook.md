@@ -1,4 +1,4 @@
-# C++ Competitive Programming Codebook
+# C++ Codebook
 
 This codebook contains commonly used algorithms and utilities optimized for competitive programming.
 
@@ -7,7 +7,7 @@ This codebook contains commonly used algorithms and utilities optimized for comp
 ## 1. Basic Utilities
 
 ### IO Speedup (cin, cout)
-> Accelerates C++ standard input/output operations. Avoid mixing `cin/cout` with `scanf/printf` after execution.
+Accelerates C++ standard input/output operations. Avoid mixing `cin/cout` with `scanf/printf` after execution.
 
 ```cpp
 #include <iostream>
@@ -21,7 +21,7 @@ void speedup() {
 ```
 
 ### Greatest Common Divisor (GCD)
-> Calculates the greatest common divisor of two integers using the Euclidean algorithm.
+Calculates the greatest common divisor of two integers using the Euclidean algorithm.
 
 ```cpp
 int GCD(int num1, int num2) {
@@ -31,7 +31,7 @@ int GCD(int num1, int num2) {
 ```
 
 ### Least Common Multiple (LCM)
-> Calculates the least common multiple of two integers.
+Calculates the least common multiple of two integers.
 
 ```cpp
 int LCM(int num1, int num2) {
@@ -326,84 +326,102 @@ pair<Point, Point> findClosestPair(vector<Point>& points) {
 }
 ```
 
-## 5. Math
+## 5. Permutation Operations
 
-### Euler Totient Function (歐拉函數)
-> **Description:** Calculates Euler's totient function $\phi(x)$, which counts the number of positive integers strictly less than $x$ that are coprime to $x$.
-> **Time Complexity:** $O(\sqrt{x})$  
-> **Space Complexity:** $O(1)$
-> **Usage:** Commonly used in number theory, particularly for finding modular multiplicative inverses and applying Euler's theorem.
-
-```cpp
-#include <cmath>
-
-int Phi(int x) {
-    if (x < 2) return 0;
-    int ret = x;
-    int sq = sqrt(x);
-    for (int p = 2; p <= sq; p++) {
-        if (x % p == 0) {
-            while (x % p == 0) x /= p;
-            ret -= ret / p;
-        }
-        if (x == 1) break;
-    }
-    if (x > 1) ret -= ret / x;
-    return ret;
-}
-```
-
-## 6. Range Queries
-
-### Difference Array
-> **Description:** Efficiently applies multiple range addition updates $[L, R]$ by modifying only the boundaries of a difference array. A prefix sum is then used to reconstruct the final array values.
-> **Returns:** The minimum coverage value across all positions after applying all updates.
-> **Time Complexity:** $O(M + N)$ where $M$ is the number of updates and $N$ is the array size.
-> **Space Complexity:** $O(N)$ for the difference array.
-> **Usage:** Ideal for scenarios requiring many range updates followed by a single full-array query or state evaluation.
+### Next Permutation (Array-based)
+> **Description:** Rearranges the array elements into the lexicographically next greater permutation of elements. If no such permutation exists (i.e., the array is sorted in descending order), it rearranges it into the lowest possible order (sorted in ascending order).
+> **Time Complexity:** $O(N)$  
+> **Space Complexity:** $O(1)$ auxiliary space
+> **Usage:** Finds the next permutation of a vector/array in-place or returns a copy of the next permutation.
 
 ```cpp
-#include <iostream>
 #include <vector>
-#include <climits>
+#include <algorithm>
 
 using namespace std;
 
-long long differenceArray() {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
-    
-    long long N, M;
-    if (!(cin >> N >> M)) return -1;
-    
-    // Size N+2 to prevent R+1 from exceeding boundary
-    vector<long long> diff(N + 2, 0LL);
-    
-    // Read interval [L, R] for each turret
-    for (int i = 0; i < M; i++) {
-        long long L, R;
-        cin >> L >> R;
-        // Difference array update: +1 at start L, -1 at position after end R+1
-        diff[L] += 1;
-        if (R + 1 <= N) {
-            diff[R + 1] -= 1;
-        }
+// Returns the lexicographically next permutation of the array.
+vector<int> nextPermutation(vector<int> nums) {
+    int n = nums.size();
+    int i = n - 2;
+    // Find the first decreasing element from the right
+    while (i >= 0 && nums[i] >= nums[i + 1]) {
+        i--;
     }
-    
-    // Compute prefix-sum directly on diff array and track the minimum value
-    long long cover = 0;          // Current cumulative coverage at the current position
-    long long answer = LLONG_MAX; // Stores the minimum coverage value
-    
-    for (int pos = 1; pos <= N; pos++) {
-        cover += diff[pos]; // diff[pos] indicates the change in coverage at pos
-        // cover represents the actual coverage count at pos
-        if (cover < answer) {
-            answer = cover;
+    if (i >= 0) {
+        // Find the successor to nums[i] from the right
+        int j = n - 1;
+        while (nums[j] <= nums[i]) {
+            j--;
         }
+        swap(nums[i], nums[j]);
     }
-    
-    // Under normal circumstances, answer is at least 0.
-    // Return the answer.
-    return answer;
+    // Reverse the remaining ascending suffix
+    reverse(nums.begin() + i + 1, nums.end());
+    return nums;
+}
+```
+
+### Permutation Rank (Lexicographical Rank)
+> **Description:** Calculates the 1-based lexicographical rank (index) of a permutation. This implementation handles generic values by using coordinate compression, uses a Fenwick Tree (Binary Indexed Tree) for $O(N \log N)$ complexity, and supports modulo arithmetic to prevent integer overflow for larger arrays.
+> **Time Complexity:** $O(N \log N)$  
+> **Space Complexity:** $O(N)$
+> **Usage:** Given a permutation of unique elements, returns its 1-based rank modulo $10^9 + 7$.
+
+```cpp
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+// Binary Indexed Tree (Fenwick Tree) helper
+struct FenwickTree {
+    int n;
+    vector<int> tree;
+    FenwickTree(int n) : n(n), tree(n + 1, 0) {}
+    void update(int i, int delta) {
+        for (; i <= n; i += i & -i) tree[i] += delta;
+    }
+    int query(int i) {
+        int sum = 0;
+        for (; i > 0; i -= i & -i) sum += tree[i];
+        return sum;
+    }
+};
+
+// Calculates the 1-based lexicographical rank of a permutation.
+// Assumes unique elements. Returns rank modulo MOD (default is 1e9 + 7).
+long long getPermutationRank(vector<int> nums, long long MOD = 1000000007) {
+    int n = nums.size();
+    if (n == 0) return 1;
+
+    // Precompute factorials modulo MOD
+    vector<long long> fact(n, 1);
+    for (int i = 1; i < n; ++i) {
+        fact[i] = (fact[i - 1] * i) % MOD;
+    }
+
+    // Coordinate compression to map values to [1, n]
+    vector<int> temp = nums;
+    sort(temp.begin(), temp.end());
+    vector<int> compressed(n);
+    for (int i = 0; i < n; ++i) {
+        compressed[i] = lower_bound(temp.begin(), temp.end(), nums[i]) - temp.begin() + 1;
+    }
+
+    FenwickTree bit(n);
+    for (int i = 1; i <= n; ++i) {
+        bit.update(i, 1);
+    }
+
+    long long rank = 1;
+    for (int i = 0; i < n; ++i) {
+        // Count how many unused elements to the right are smaller than compressed[i]
+        int smallerCount = bit.query(compressed[i] - 1);
+        rank = (rank + smallerCount * fact[n - 1 - i]) % MOD;
+        // Mark current element as used
+        bit.update(compressed[i], -1);
+    }
+    return rank;
 }
 ```
