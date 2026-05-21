@@ -2,12 +2,10 @@
 
 This codebook contains commonly used algorithms and utilities optimized for competitive programming.
 
----
-
 ## 1. Basic Utilities
 
 ### IO Speedup (cin, cout)
-Accelerates C++ standard input/output operations. Avoid mixing `cin/cout` with `scanf/printf` after execution.
+> Accelerates C++ standard input/output operations. Avoid mixing `cin/cout` with `scanf/printf` after execution.
 
 ```cpp
 #include <iostream>
@@ -21,17 +19,19 @@ void speedup() {
 ```
 
 ### Greatest Common Divisor (GCD)
-Calculates the greatest common divisor of two integers using the Euclidean algorithm.
+> Calculates the greatest common divisor of two integers using the Euclidean algorithm.
 
 ```cpp
-int GCD(int num1, int num2) {
-    if (num2 == 0) return num1;
-    return GCD(num2, num1 % num2);
+int GCD(int x, int y) {
+    if (!x) return y;
+    if (!y) return x;
+    while ((x %= y) && (y %= x));
+    return x + y;
 }
 ```
 
 ### Least Common Multiple (LCM)
-Calculates the least common multiple of two integers.
+> Calculates the least common multiple of two integers.
 
 ```cpp
 int LCM(int num1, int num2) {
@@ -39,7 +39,63 @@ int LCM(int num1, int num2) {
 }
 ```
 
----
+### Priority Queue (std::priority_queue)
+> **Description:** Demonstrates the use of C++ built-in `std::priority_queue` (from `<queue>`), including default behavior (Max-Heap), built-in Min-Heap, and Custom Struct Sorting.
+> - **Default:** Max-Heap (largest element at the top).
+> - **Built-in Min-Heap:** Uses `std::greater` (smallest element at the top). Very common with `std::pair` in graph algorithms.
+> - **Custom Struct Sorting:** Overload the `<` operator inside a custom `struct`.
+
+```cpp
+#include <queue>
+#include <vector>
+#include <iostream>
+#include <utility> // for pair
+
+using namespace std;
+
+// Struct with custom sorting rules
+struct Item {
+    int id;
+    int priority;
+
+    // Custom sorting rule: sort by priority ascending (min-heap)
+    // If priority is equal, sort by id ascending (smaller id at the top)
+    // Note: Since priority_queue is a Max-Heap by default, we invert the comparison logic.
+    bool operator<(const Item& other) const {
+        if (priority != other.priority) {
+            return priority > other.priority; // Larger priority means "less" priority in max-heap (so smaller comes to top)
+        }
+        return id > other.id; // Larger ID means "less" priority (so smaller ID comes to top)
+    }
+};
+
+void priorityQueueUsage() {
+    priority_queue<int> max_pq;
+    max_pq.push(10);
+    max_pq.push(30);
+    max_pq.push(20);
+    // max_pq.top() is 30 (largest element first)
+
+    priority_queue<int, vector<int>, greater<int>> min_pq;
+    min_pq.push(10);
+    min_pq.push(30);
+    min_pq.push(20);
+    // min_pq.top() is 10 (smallest element first)
+
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pair_pq;
+    pair_pq.push({5, 101}); // {distance, node}
+    pair_pq.push({2, 102});
+    pair_pq.push({5, 100});
+    // pair_pq.top() is {2, 102} (smallest distance first, then smallest node index)
+
+    priority_queue<Item> custom_pq;
+    custom_pq.push({101, 5});
+    custom_pq.push({102, 5});
+    custom_pq.push({103, 2});
+    // custom_pq.top() is {103, 2} (priority 2), then {101, 5} (priority 5, smaller id first)
+}
+```
+
 
 ## 2. Prime Numbers
 
@@ -120,7 +176,37 @@ vector<int> sieve(int N) {
 }
 ```
 
----
+### Prime Factorization
+> **Description:** Performs prime factorization on a 64-bit integer $n$.
+> **Time Complexity:** $O(\sqrt{n})$
+> **Space Complexity:** $O(\log n)$ (number of unique prime factors)
+> **Returns:** A list of pairs where each pair is `{base, exponent}` (representing the base prime and its exponent/power).
+
+```cpp
+#include <vector>
+#include <utility>
+
+using namespace std;
+
+// Returns a vector of pairs: {prime_base, exponent}
+vector<pair<long long, int>> primeFactorization(long long n) {
+    vector<pair<long long, int>> factors;
+    for (long long i = 2; i * i <= n; ++i) {
+        if (n % i == 0) {
+            int count = 0;
+            while (n % i == 0) {
+                count++;
+                n /= i; // Eliminate the factor
+            }
+            factors.push_back({i, count});
+        }
+    }
+    if (n > 1) {
+        factors.push_back({n, 1}); // Remaining prime factor
+    }
+    return factors;
+}
+```
 
 ## 3. String Processing
 
@@ -215,8 +301,6 @@ vector<int> KMPsearch(const string &text, const string &pattern) {
     return result;
 }
 ```
-
----
 
 ## 4. Computational Geometry
 
@@ -505,5 +589,103 @@ long long differenceArray() {
     // Under normal circumstances, answer is at least 0.
     // Return the answer.
     return answer;
+}
+```
+
+## 8. Graph Algorithms
+
+### Minimum Spanning Tree (Kruskal's Algorithm)
+> **Description:** Finds the Minimum Spanning Tree (MST) of a connected, undirected, weighted graph. It uses the greedy approach: sorts all edges in non-decreasing order of their weight, and adds edges one by one if they don't form a cycle. A Disjoint Set Union (DSU) structure is used to check and manage cycles efficiently.
+> **Time Complexity:** $O(E \log E + E \alpha(V))$ where $E$ is the number of edges, $V$ is the number of vertices, and $\alpha$ is the Inverse Ackermann function.
+> **Space Complexity:** $O(V)$ for the DSU parent and rank arrays.
+> **Usage:** Suitable for sparse graphs. Supports 1-indexed vertices by default.
+
+```cpp
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+// Representation of an edge in the graph
+struct Edge {
+    int u, v;    // u, v: The two endpoint vertices (nodes) connected by this edge
+    long long w; // w: The weight (cost/distance) of this edge
+    // Overload the < operator to sort edges by weight
+    bool operator<(const Edge& other) const {
+        return w < other.w;
+    }
+};
+
+// Disjoint Set Union (DSU) / Union-Find structure
+struct DSU {
+    vector<int> parent; // parent[i] stores the parent/leader of element i
+    vector<int> rank;   // rank[i] stores the approximate depth of the tree rooted at i (for Union by Rank optimization)
+    
+    DSU(int n) { // n: The number of vertices/elements in the graph
+        parent.resize(n + 1);
+        rank.resize(n + 1, 0);
+        for (int i = 0; i <= n; i++) {
+            parent[i] = i; // Initially, every vertex is its own parent (disjoint set)
+        }
+    }
+    
+    // Finds the representative (root leader) of the set containing element i
+    int find(int i) {
+        if (parent[i] == i)
+            return i;
+        return parent[i] = find(parent[i]); // Path compression optimization
+    }
+    
+    // Merges the set containing element i with the set containing element j.
+    // Returns true if they were in different sets and successfully merged; false if they were already in the same set.
+    bool unite(int i, int j) {
+        int root_i = find(i);
+        int root_j = find(j);
+        if (root_i != root_j) {
+            // Union by rank optimization: attach the smaller tree under the larger tree
+            if (rank[root_i] < rank[root_j]) {
+                parent[root_i] = root_j;
+            } else if (rank[root_i] > rank[root_j]) {
+                parent[root_j] = root_i;
+            } else {
+                parent[root_j] = root_i;
+                rank[root_i]++;
+            }
+            return true; // Successfully merged
+        }
+        return false; // Already in the same set (connecting them would form a cycle)
+    }
+};
+
+// Computes the MST weight and optionally stores the selected edges.
+// n: Number of vertices (nodes) in the graph.
+// edges: Input vector containing all edges in the graph (will be sorted in-place).
+// mstEdges: Output vector to store the selected edges that form the MST.
+// Returns the total MST weight, or -1 if the graph is disconnected (no MST exists).
+long long kruskal(int n, vector<Edge>& edges, vector<Edge>& mstEdges) {
+    mstEdges.clear();
+    sort(edges.begin(), edges.end()); // Sort edges in ascending order of weight (greedy approach)
+    
+    DSU dsu(n); // Disjoint Set Union to detect cycles
+    long long mst_weight = 0; // Accumulator for the total weight of the MST
+    int edges_used = 0; // Counter for the number of edges added to the MST
+    
+    for (const auto& edge : edges) {
+        // Try to connect the two endpoints of the current edge (edge.u and edge.v)
+        if (dsu.unite(edge.u, edge.v)) {
+            mst_weight += edge.w;
+            mstEdges.push_back(edge);
+            edges_used++;
+            // A tree with n vertices always has exactly n - 1 edges
+            if (edges_used == n - 1) {
+                break;
+            }
+        }
+    }
+    
+    if (edges_used == n - 1) {
+        return mst_weight;
+    }
+    return -1; // Graph is not fully connected (could not select n - 1 edges)
 }
 ```
