@@ -5,7 +5,6 @@ This codebook contains commonly used algorithms and utilities optimized for comp
 ## 1. Basic Utilities
 
 ### IO Speedup (cin, cout)
-> Accelerates C++ standard input/output operations. Avoid mixing `cin/cout` with `scanf/printf` after execution.
 
 ```cpp
 #include <iostream>
@@ -19,7 +18,6 @@ void speedup() {
 ```
 
 ### Greatest Common Divisor (GCD)
-> Calculates the greatest common divisor of two integers using the Euclidean algorithm.
 
 ```cpp
 int GCD(int x, int y) {
@@ -31,7 +29,6 @@ int GCD(int x, int y) {
 ```
 
 ### Least Common Multiple (LCM)
-> Calculates the least common multiple of two integers.
 
 ```cpp
 int LCM(int num1, int num2) {
@@ -100,7 +97,6 @@ void priorityQueueUsage() {
 ## 2. Prime Numbers
 
 ### Count Primes (Sieve of Eratosthenes)
-> **Description:** Counts the number of prime numbers strictly less than or equal to $N$ using the classical Sieve of Eratosthenes.
 > **Time Complexity:** $O(N \log \log N)$  
 > **Space Complexity:** $O(N)$
 > **Usage:** Efficiently counts large ranges of primes.
