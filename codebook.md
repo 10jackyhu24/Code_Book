@@ -588,6 +588,51 @@ long long differenceArray() {
 }
 ```
 
+### Fenwick Tree (Binary Indexed Tree)
+**Ddescription:** Support Point Update, Prefix Sum Query, Range Sum Query
+**Complexity:** 
+Update : O(logN), Query  : O(logN), Memory : O(N)
+```cpp
+struct BIT {
+    int n;
+    vector<long long> bit;
+
+    BIT(int _n) {
+        n = _n;
+        bit.assign(n + 1, 0);
+    }
+
+    void add(int idx, long long val) {
+        while (idx <= n) {
+            bit[idx] += val;
+            idx += idx & -idx;
+        }
+    }
+
+    long long sum(int idx) {
+        long long res = 0;
+
+        while (idx > 0) {
+            res += bit[idx];
+            idx -= idx & -idx;
+        }
+
+        return res;
+    }
+
+    long long query(int l, int r) {
+        return sum(r) - sum(l - 1);
+    }
+};
+```
+**Note:** 
+- `lowbits[i]` 表示第 `i` 格所管理的區間大小
+```cpp
+lowbit(x) = x & -x
+```
+
+`tree[i]` 儲存的是第 `i` 格所管理的區間大小的 sum
+
 ## 8. Graph Algorithms
 
 ### Minimum Spanning Tree (Kruskal's Algorithm)
