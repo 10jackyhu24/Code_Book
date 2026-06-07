@@ -625,13 +625,13 @@ struct BIT {
     }
 };
 ```
-**Note:** 
-- `lowbits[i]` 表示第 `i` 格所管理的區間大小
+
+**Note:**
+- lowbit[i] returns the size of the range managed by index i:
 ```cpp
 lowbit(x) = x & -x
 ```
-
-`tree[i]` 儲存的是第 `i` 格所管理的區間大小的 sum
+- tree[i] stores the sum for the range managed by index
 
 ## 8. Graph Algorithms
 
