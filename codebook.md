@@ -5,7 +5,6 @@ This codebook contains commonly used algorithms and utilities optimized for comp
 ## 1. Basic Utilities
 
 ### IO Speedup (cin, cout)
-> Accelerates C++ standard input/output operations. Avoid mixing `cin/cout` with `scanf/printf` after execution.
 
 ```cpp
 #include <iostream>
@@ -19,7 +18,6 @@ void speedup() {
 ```
 
 ### Greatest Common Divisor (GCD)
-> Calculates the greatest common divisor of two integers using the Euclidean algorithm.
 
 ```cpp
 int GCD(int x, int y) {
@@ -31,7 +29,6 @@ int GCD(int x, int y) {
 ```
 
 ### Least Common Multiple (LCM)
-> Calculates the least common multiple of two integers.
 
 ```cpp
 int LCM(int num1, int num2) {
@@ -100,7 +97,6 @@ void priorityQueueUsage() {
 ## 2. Prime Numbers
 
 ### Count Primes (Sieve of Eratosthenes)
-> **Description:** Counts the number of prime numbers strictly less than or equal to $N$ using the classical Sieve of Eratosthenes.
 > **Time Complexity:** $O(N \log \log N)$  
 > **Space Complexity:** $O(N)$
 > **Usage:** Efficiently counts large ranges of primes.
@@ -591,6 +587,51 @@ long long differenceArray() {
     return answer;
 }
 ```
+
+### Fenwick Tree (Binary Indexed Tree)
+**Ddescription:** Support Point Update, Prefix Sum Query, Range Sum Query
+**Complexity:** 
+Update : O(logN), Query  : O(logN), Memory : O(N)
+```cpp
+struct BIT {
+    int n;
+    vector<long long> bit;
+
+    BIT(int _n) {
+        n = _n;
+        bit.assign(n + 1, 0);
+    }
+
+    void add(int idx, long long val) {
+        while (idx <= n) {
+            bit[idx] += val;
+            idx += idx & -idx;
+        }
+    }
+
+    long long sum(int idx) {
+        long long res = 0;
+
+        while (idx > 0) {
+            res += bit[idx];
+            idx -= idx & -idx;
+        }
+
+        return res;
+    }
+
+    long long query(int l, int r) {
+        return sum(r) - sum(l - 1);
+    }
+};
+```
+
+**Note:**
+- lowbit[i] returns the size of the range managed by index i:
+```cpp
+lowbit(x) = x & -x
+```
+- tree[i] stores the sum for the range managed by index
 
 ## 8. Graph Algorithms
 
