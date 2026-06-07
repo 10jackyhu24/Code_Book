@@ -7,13 +7,60 @@ This codebook contains commonly used algorithms and utilities optimized for comp
 ### IO Speedup (cin, cout)
 
 ```cpp
+cin.sync_with_stdio(0);
+cin.tie(0);
+```
+
+### Buffered Output (Defer Flushing Until Program End)
+```cpp
+ios::sync_with_stdio(false);
+cin.tie(NULL);
+```
+
+### Test With File
+```powerShell
+g++ main.cpp -o main
+main < input.in > output.out
+```
+
+### Write File
+```cpp
 #include <iostream>
+#include <fstream>
+#include <string>
 
-using namespace std;
+int main() {
+    std::ofstream outFile("example.txt");
+    if (!outFile.is_open()) {
+        std::cerr << "Error opening file for writing!" << std::endl;
+        return 1;
+    }
+    outFile << "Hello, World!\n";
+    outFile << "This is a line in a text file.\n";
+    outFile << 123 << " " << 45.67 << "\n";
+    outFile.close();
+    return 0;
+}
+```
 
-void speedup() {
-    cin.sync_with_stdio(0);
-    cin.tie(0);
+### Read File
+```cpp
+#include <iostream>
+#include <fstream>
+#include <string>
+
+int main() {
+    std::ifstream inFile("example.txt");
+    if (!inFile.is_open()) {
+        std::cerr << "Error opening file for reading!" << std::endl;
+        return 1;
+    }
+    std::string line;
+    while (std::getline(inFile, line)) {
+        std::cout << line << std::endl;
+    }
+    inFile.close();
+    return 0;
 }
 ```
 
@@ -728,5 +775,80 @@ long long kruskal(int n, vector<Edge>& edges, vector<Edge>& mstEdges) {
         return mst_weight;
     }
     return -1; // Graph is not fully connected (could not select n - 1 edges)
+}
+```
+
+### Bipartite Matching (Hungarian Algorithm)
+
+> Finds the maximum matching in a bipartite graph.
+> Nodes in set $U$ are indexed $0$ to $n-1$. Nodes in set $V$ are indexed $0$ to $m-1$.
+
+```cpp
+#include <vector>
+
+struct Hungarian {
+    int n, m;
+    std::vector<std::vector<int>> adj; // adj[u] contains neighbors in V
+    std::vector<int> match_v;          // match_v[v] stores the matched u node
+    std::vector<bool> visited;
+
+    Hungarian(int n, int m) : n(n), m(m), adj(n), match_v(m, -1), visited(m, false) {}
+
+    void addEdge(int u, int v) {
+        adj[u].push_back(v);
+    }
+
+    // DFS to find an augmenting path
+    bool dfs(int u) {
+        for (int v : adj[u]) {
+            if (visited[v]) continue;
+            visited[v] = true;
+
+            // If v is not matched, or its match can find another choice
+            if (match_v[v] == -1 || dfs(match_v[v])) {
+                match_v[v] = u;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Returns the maximum matching size
+    int solve() {
+        int ans = 0;
+        std::fill(match_v.begin(), match_v.end(), -1);
+        for (int i = 0; i < n; ++i) {
+            std::fill(visited.begin(), visited.end(), false);
+            if (dfs(i)) ans++;
+        }
+        return ans;
+    }
+};
+```
+
+## 9. Sequence Algorithms
+
+### Longest Increasing Subsequence (LIS)
+
+> Finds the length of the longest strictly increasing subsequence in $O(N \log N)$ time and $O(N)$ space.
+
+```cpp
+#include <vector>
+#include <algorithm>
+
+// Returns the length of the LIS
+int getLIS(const std::vector<int>& nums) {
+    if (nums.empty()) return 0;
+
+    std::vector<int> v;
+    for (int x : nums) {
+        auto it = std::lower_bound(v.begin(), v.end(), x);
+        if (it == v.end()) {
+            v.push_back(x); // x is larger than all elements, extend the sequence
+        } else {
+            *it = x; // Replace the first element >= x to maintain a smaller tail
+        }
+    }
+    return v.size();
 }
 ```
