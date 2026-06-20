@@ -83,6 +83,17 @@ int LCM(int num1, int num2) {
 }
 ```
 
+### GCD and LCM in C++17
+```cpp
+#include <numeric>
+int main () {
+    int a = 48, b = 18;
+    int gcd = std::gcd(a, b);
+    int lcm = std::lcm(a, b);
+    return 0;
+}
+```
+
 ### Priority Queue (std::priority_queue)
 > **Description:** Demonstrates the use of C++ built-in `std::priority_queue` (from `<queue>`), including default behavior (Max-Heap), built-in Min-Heap, and Custom Struct Sorting.
 > - **Default:** Max-Heap (largest element at the top).
