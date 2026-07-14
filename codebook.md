@@ -949,7 +949,134 @@ struct Trie {
 };
 ```
 
-## 11. Expected Value DP
+## 11. Aho-Corasick Automaton (AC Automaton)
+
+> **Description:** An extension of Trie that supports efficient **multiple pattern matching** by adding failure links (similar to KMP). It can find all occurrences of multiple patterns in a text in linear time.
+
+Use AC Automaton when:
+
+- Matching **multiple patterns** in a single text
+- Sensitive word filtering
+- Dictionary matching
+- DNA sequence matching
+- String DP (Automaton DP)
+
+If there is only **one pattern**, KMP is usually sufficient.
+
+---
+
+### Algorithm Steps
+
+```text
+Patterns -> Build Trie -> Build Failure Links (BFS) -> Scan Text
+```
+
+Failure links allow the automaton to continue matching from the **longest valid suffix** instead of restarting from the root.
+
+---
+
+```cpp
+struct AhoCorasick {
+    static constexpr int SIGMA = 26;
+
+    struct Node {
+        int nxt[SIGMA];
+        int fail;
+        vector<int> out;
+
+        Node() {
+            memset(nxt, 0, sizeof(nxt));
+            fail = 0;
+        }
+    };
+
+    vector<Node> trie;
+
+    AhoCorasick() {
+        trie.emplace_back();   // root
+    }
+
+    void insert(const string &s, int id) {
+        int cur = 0;
+        for (char c : s) {
+            int x = c - 'a';
+            if (!trie[cur].nxt[x]) {
+                trie[cur].nxt[x] = trie.size();
+                trie.emplace_back();
+            }
+            cur = trie[cur].nxt[x];
+        }
+        trie[cur].out.push_back(id);
+    }
+
+    void build() {
+        queue<int> q;
+
+        for (int c = 0; c < SIGMA; c++) {
+            int v = trie[0].nxt[c];
+            if (v) q.push(v);
+        }
+
+        while (!q.empty()) {
+            int u = q.front();
+            q.pop();
+
+            for (int c = 0; c < SIGMA; c++) {
+                int &v = trie[u].nxt[c];
+
+                if (v) {
+                    trie[v].fail = trie[trie[u].fail].nxt[c];
+                    trie[v].out.insert(
+                        trie[v].out.end(),
+                        trie[trie[v].fail].out.begin(),
+                        trie[trie[v].fail].out.end()
+                    );
+                    q.push(v);
+                } else {
+                    v = trie[trie[u].fail].nxt[c];
+                }
+            }
+        }
+    }
+
+    vector<int> query(const string &text) {
+        vector<int> res;
+        int cur = 0;
+
+        for (char c : text) {
+            cur = trie[cur].nxt[c - 'a'];
+            for (int id : trie[cur].out)
+                res.push_back(id);
+        }
+
+        return res;
+    }
+};
+```
+
+---
+
+### Procedure
+
+```text
+1. Insert all patterns into the Trie.
+2. Build failure links using BFS.
+3. Scan the text once.
+4. Report every matched pattern.
+```
+
+---
+
+### Notes
+
+- Root index is usually `0`.
+- Failure links are built using **BFS**.
+- Missing transitions are completed during `build()`, so matching is **O(|Text|)**.
+- `out` stores all pattern IDs ending at the current node.
+- Frequently combined with **DP** to solve forbidden-string and string-counting problems.
+
+
+## 12. Expected Value DP
 
 > **Idea:** Define the expectation of each state and write the expectation equation directly.
 
