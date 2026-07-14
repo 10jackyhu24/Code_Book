@@ -948,3 +948,51 @@ struct Trie {
     }
 };
 ```
+
+## 11. Expected Value DP
+
+> **Idea:** Define the expectation of each state and write the expectation equation directly.
+
+### General Formula
+
+$$
+E(s)=\sum P_i\left(C_i+E(next_i)\right)
+$$
+
+where
+
+- $P_i$: probability of transition
+- $C_i$: immediate cost
+- $E(next_i)$: future expectation
+
+### If Self-loop Exists
+
+Suppose
+
+$$
+E(s)=A+pE(s)
+$$
+
+Move the self-loop term to the left:
+
+$$
+E(s)=\frac{A}{1-p}
+$$
+
+This is the most common transformation in Expected Value DP.
+
+### Steps
+
+1. Define the DP state.
+2. Enumerate all possible transitions.
+3. Write the expectation equation directly.
+4. Move self-loop terms to the left if necessary.
+5. Solve the equation.
+6. Use memoization or DP.
+
+### Common State Types
+
+- `dp[i]`
+- `dp[mask]`
+- `dp[x][y]`
+- `dp[a][b][c]`
