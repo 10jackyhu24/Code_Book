@@ -863,3 +863,88 @@ int getLIS(const std::vector<int>& nums) {
     return v.size();
 }
 ```
+
+## 10. Trie (Prefix Tree)
+
+> **Description:** A Trie (Prefix Tree) efficiently stores a collection of strings by sharing common prefixes. It supports insertion, exact string lookup, and prefix queries.
+> **Time Complexity:** $O(L)$ for **insert**, **search**, and **startsWith**, $L$ : The length of the string.
+> **Space Complexity:** $O(\Sigma L)$, $\Sigma L$ : The total number of inserted characters.
+
+```cpp
+#include <vector>
+#include <string>
+
+using namespace std;
+
+struct Trie {
+    // Each Trie node stores:
+    // nxt[i] : the index of the child corresponding to character ('a' + i)
+    // isEnd  : true if a word ends at this node
+    struct Node {
+        int nxt[26];
+        bool isEnd;
+
+        Node() {
+            fill(nxt, nxt + 26, -1);
+            isEnd = false;
+        }
+    };
+
+    vector<Node> trie;
+
+    Trie() {
+        trie.emplace_back(); // Node 0 is the root
+    }
+
+    // Inserts a string into the Trie.
+    void insert(const string& word) {
+        int current = 0;
+
+        for (char ch : word) {
+            int index = ch - 'a';
+
+            // Create a new node if the path does not exist
+            if (trie[current].nxt[index] == -1) {
+                trie[current].nxt[index] = trie.size();
+                trie.emplace_back();
+            }
+
+            current = trie[current].nxt[index];
+        }
+
+        trie[current].isEnd = true;
+    }
+
+    // Returns true if the exact word exists in the Trie.
+    bool search(const string& word) {
+        int current = 0;
+
+        for (char ch : word) {
+            int index = ch - 'a';
+
+            if (trie[current].nxt[index] == -1)
+                return false;
+
+            current = trie[current].nxt[index];
+        }
+
+        return trie[current].isEnd;
+    }
+
+    // Returns true if there exists any word with the given prefix.
+    bool startsWith(const string& prefix) {
+        int current = 0;
+
+        for (char ch : prefix) {
+            int index = ch - 'a';
+
+            if (trie[current].nxt[index] == -1)
+                return false;
+
+            current = trie[current].nxt[index];
+        }
+
+        return true;
+    }
+};
+```
