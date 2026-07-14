@@ -28,5 +28,5 @@ winget install --source winget --exact --id JohnMacFarlane.Pandoc
 Once the setup is complete, navigate to your markdown code_book folder and run this command to generate your 2-column A4 Code Book:
 
 ```
-pandoc codebook.md -o codebook.pdf --pdf-engine=xelatex -V geometry:"top=1.4cm, bottom=1cm, left=1cm, right=1cm" -V classoption=twocolumn -V fontsize=9pt --include-in-header=header.tex
+pandoc codebook.md -o codebook.pdf --pdf-engine=xelatex -V geometry:"a4paper, top=1.8cm, bottom=0cm, left=1cm, right=1cm" -V classoption=twocolumn -V fontsize=9pt --include-in-header=header.tex
 ```

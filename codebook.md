@@ -155,9 +155,6 @@ void priorityQueueUsage() {
 ## 2. Prime Numbers
 
 ### Count Primes (Sieve of Eratosthenes)
-> **Time Complexity:** $O(N \log \log N)$  
-> **Space Complexity:** $O(N)$
-> **Usage:** Efficiently counts large ranges of primes.
 
 ```cpp
 #include <vector>
@@ -181,10 +178,6 @@ int countPrimes(int N) {
 ```
 
 ### Prime Number Test
-> **Description:** Tests if a given 64-bit integer $n$ is prime using $O(\sqrt{n})$ trial division optimized with a $6k \pm 1$ rule.
-> **Time Complexity:** $O(\sqrt{n})$  
-> **Space Complexity:** $O(1)$
-> **Usage:** Fast primality test for single large integers.
 
 ```cpp
 bool isPrime(long long n) {
@@ -201,15 +194,10 @@ bool isPrime(long long n) {
 ```
 
 ### List Primes (Sieve of Eratosthenes)
-> **Description:** Generates and returns a list of all prime numbers less than or equal to $N$.
-> **Time Complexity:** $O(N \log \log N)$  
-> **Space Complexity:** $O(N)$
 
 ```cpp
 #include <vector>
-
 using namespace std;
-
 vector<int> sieve(int N) {
     vector<bool> isPrime(N + 1, true);
     isPrime[0] = isPrime[1] = false;
@@ -231,18 +219,11 @@ vector<int> sieve(int N) {
 ```
 
 ### Prime Factorization
-> **Description:** Performs prime factorization on a 64-bit integer $n$.
-> **Time Complexity:** $O(\sqrt{n})$
-> **Space Complexity:** $O(\log n)$ (number of unique prime factors)
-> **Returns:** A list of pairs where each pair is `{base, exponent}` (representing the base prime and its exponent/power).
 
 ```cpp
 #include <vector>
 #include <utility>
-
 using namespace std;
-
-// Returns a vector of pairs: {prime_base, exponent}
 vector<pair<long long, int>> primeFactorization(long long n) {
     vector<pair<long long, int>> factors;
     for (long long i = 2; i * i <= n; ++i) {
@@ -467,10 +448,6 @@ pair<Point, Point> findClosestPair(vector<Point>& points) {
 ## 5. Permutation Operations
 
 ### Next Permutation (Array-based)
-> **Description:** Rearranges the array elements into the lexicographically next greater permutation of elements. If no such permutation exists (i.e., the array is sorted in descending order), it rearranges it into the lowest possible order (sorted in ascending order).
-> **Time Complexity:** $O(N)$  
-> **Space Complexity:** $O(1)$ auxiliary space
-> **Usage:** Finds the next permutation of a vector/array in-place or returns a copy of the next permutation.
 
 ```cpp
 #include <vector>
@@ -501,10 +478,6 @@ vector<int> nextPermutation(vector<int> nums) {
 ```
 
 ### Permutation Rank (Lexicographical Rank)
-> **Description:** Calculates the 1-based lexicographical rank (index) of a permutation. This implementation handles generic values by using coordinate compression, uses a Fenwick Tree (Binary Indexed Tree) for $O(N \log N)$ complexity, and supports modulo arithmetic to prevent integer overflow for larger arrays.
-> **Time Complexity:** $O(N \log N)$  
-> **Space Complexity:** $O(N)$
-> **Usage:** Given a permutation of unique elements, returns its 1-based rank modulo $10^9 + 7$.
 
 ```cpp
 #include <vector>
@@ -692,6 +665,181 @@ lowbit(x) = x & -x
 - tree[i] stores the sum for the range managed by index
 
 ## 8. Graph Algorithms
+
+### Dijkstra's Algorithm (Single-Source Shortest Path)
+
+```cpp
+#include <vector>
+#include <queue>
+#include <climits>
+
+using namespace std;
+
+const long long INF = LLONG_MAX;
+
+// adj[u] = list of {v, weight} representing edge u -> v with given weight
+vector<long long> dijkstra(int n, vector<vector<pair<int, long long>>>& adj, int src) {
+    vector<long long> dist(n + 1, INF);
+    dist[src] = 0;
+
+    // {distance, node}, min-heap by distance
+    priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<>> pq;
+    pq.push({0, src});
+
+    while (!pq.empty()) {
+        auto [d, u] = pq.top();
+        pq.pop();
+
+        if (d > dist[u]) continue; // Outdated entry, skip
+
+        for (auto& [v, w] : adj[u]) {
+            if (dist[u] + w < dist[v]) {
+                dist[v] = dist[u] + w;
+                pq.push({dist[v], v});
+            }
+        }
+    }
+
+    return dist; // dist[i] = shortest distance from src to i (INF if unreachable)
+}
+```
+
+**Build example:**
+```cpp
+int n = 5;
+vector<vector<pair<int, long long>>> adj(n + 1); // 1-indexed, size n+1
+
+auto addEdge = [&](int u, int v, long long w) {
+    adj[u].push_back({v, w});
+    adj[v].push_back({u, w}); // remove this line if the graph is directed
+};
+
+addEdge(1, 2, 4);
+addEdge(1, 3, 1);
+addEdge(3, 2, 2);
+
+vector<long long> dist = dijkstra(n, adj, 1);
+// dist[2] = 3 (via 1 -> 3 -> 2)
+```
+
+### Bellman-Ford Algorithm (Handles Negative Weights + Cycle Detection)
+
+```cpp
+#include <vector>
+#include <climits>
+
+using namespace std;
+
+const long long INF = LLONG_MAX;
+
+struct Edge {
+    int u, v;
+    long long w;
+};
+
+// Returns {dist, hasNegativeCycle}
+// dist[i] = shortest distance from src to i (INF if unreachable)
+pair<vector<long long>, bool> bellmanFord(int n, vector<Edge>& edges, int src) {
+    vector<long long> dist(n + 1, INF);
+    dist[src] = 0;
+
+    // Relax all edges V-1 times
+    for (int i = 0; i < n - 1; i++) {
+        for (auto& e : edges) {
+            if (dist[e.u] != INF && dist[e.u] + e.w < dist[e.v]) {
+                dist[e.v] = dist[e.u] + e.w;
+            }
+        }
+    }
+
+    // Check for negative weight cycle: if any edge can still be relaxed
+    bool hasNegativeCycle = false;
+    for (auto& e : edges) {
+        if (dist[e.u] != INF && dist[e.u] + e.w < dist[e.v]) {
+            hasNegativeCycle = true;
+            break;
+        }
+    }
+
+    return {dist, hasNegativeCycle};
+}
+```
+
+**Build example:**
+```cpp
+int n = 5;
+vector<Edge> edges;
+
+// Just push every edge into a flat vector, no grouping needed
+edges.push_back({1, 2, 4});
+edges.push_back({1, 3, 1});
+edges.push_back({3, 2, 2});
+edges.push_back({2, 4, -3}); // negative weight is fine
+
+auto [dist, hasNegCycle] = bellmanFord(n, edges, 1);
+
+if (hasNegCycle) {
+    // Negative cycle exists, shortest path is undefined
+} else {
+    // dist[4] = shortest distance
+}
+```
+
+### Floyd-Warshall Algorithm (All-Pairs Shortest Path)
+
+```cpp
+#include <vector>
+#include <climits>
+
+using namespace std;
+
+const long long INF = LLONG_MAX / 2; // Avoid overflow when adding two INF values
+
+// dist[i][j] initial state should be set by caller:
+// dist[i][i] = 0, dist[i][j] = edge weight if edge exists, else INF
+// Returns true if graph has no negative cycle, false otherwise
+bool floydWarshall(int n, vector<vector<long long>>& dist) {
+    for (int k = 1; k <= n; k++) {
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (dist[i][k] + dist[k][j] < dist[i][j]) {
+                    dist[i][j] = dist[i][k] + dist[k][j];
+                }
+            }
+        }
+    }
+
+    // Check for negative cycle: if any dist[i][i] < 0
+    for (int i = 1; i <= n; i++) {
+        if (dist[i][i] < 0) return false; // Negative cycle detected
+    }
+
+    return true; // No negative cycle, dist is valid
+}
+```
+
+**Build example:**
+```cpp
+int n = 4;
+vector<vector<long long>> dist(n + 1, vector<long long>(n + 1, INF));
+
+// Initialize the diagonal
+for (int i = 1; i <= n; i++) dist[i][i] = 0;
+
+// Add edges (directed graph example)
+dist[1][2] = 3;
+dist[2][3] = 1;
+dist[1][3] = 8; // if both a direct edge and a shorter indirect path exist, the algorithm resolves it automatically
+dist[3][4] = 2;
+
+bool ok = floydWarshall(n, dist);
+
+if (!ok) {
+    // Negative cycle exists
+} else {
+    // dist[1][4] = 6 (via 1 -> 2 -> 3 -> 4 = 3+1+2)
+}
+```
 
 ### Minimum Spanning Tree (Kruskal's Algorithm)
 > **Description:** Finds the Minimum Spanning Tree (MST) of a connected, undirected, weighted graph. It uses the greedy approach: sorts all edges in non-decreasing order of their weight, and adds edges one by one if they don't form a cycle. A Disjoint Set Union (DSU) structure is used to check and manage cycles efficiently.
@@ -963,8 +1111,6 @@ Use AC Automaton when:
 
 If there is only **one pattern**, KMP is usually sufficient.
 
----
-
 ### Algorithm Steps
 
 ```text
@@ -972,8 +1118,6 @@ Patterns -> Build Trie -> Build Failure Links (BFS) -> Scan Text
 ```
 
 Failure links allow the automaton to continue matching from the **longest valid suffix** instead of restarting from the root.
-
----
 
 ```cpp
 struct AhoCorasick {
@@ -1054,8 +1198,6 @@ struct AhoCorasick {
 };
 ```
 
----
-
 ### Procedure
 
 ```text
@@ -1064,8 +1206,6 @@ struct AhoCorasick {
 3. Scan the text once.
 4. Report every matched pattern.
 ```
-
----
 
 ### Notes
 
