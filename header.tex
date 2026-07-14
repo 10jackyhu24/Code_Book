@@ -33,3 +33,27 @@
 \renewcommand{\theFancyVerbLine}{\tiny\color{gray}\arabic{FancyVerbLine}}
 
 \raggedbottom
+
+% 4. Page numbering configuration: Move page number to the top right
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{} % Clear all header and footer fields
+
+% Place page number on the top right
+\rhead{\thepage} 
+
+% Remove the default horizontal rule under the header
+\renewcommand{\headrulewidth}{0pt}
+
+% Force the first page to also use this style
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \rhead{\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
+% === Standard Spacing for Tight Layout ===
+% Use safe positive values to prevent the layout engine from breaking.
+\setlength{\headheight}{14pt}  % Space for the page number itself
+\setlength{\headsep}{10pt}     % Gap between page number and the first line of content
+\setlength{\footskip}{0pt}     % No footer space needed since we use no footers
