@@ -564,6 +564,43 @@ long long getPermutationRank(vector<int> nums, long long MOD = 1000000007) {
 }
 ```
 
+### Get Permutation by Rank
+> **Description:** Takes an integer rank (and the size $N$) and returns the corresponding permutation array using the factorial number system (Lehmer code).
+> **Time Complexity:** $O(N^2)$ with linear scan, or $O(N \log N)$ with Fenwick Tree.
+> **Space Complexity:** $O(N)$
+> **Usage:** Decodes a 0-based rank into the $k$-th lexicographic permutation of $\{0, 1, \ldots, N-1\}$.
+
+```cpp
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+// Returns the permutation corresponding to the given 0-based rank.
+// Elements are drawn from {0, 1, ..., n-1}.
+vector<int> getPermutationByRank(int n, long long rank) {
+    // Precompute factorials
+    vector<long long> fact(n, 1);
+    for (int i = 1; i < n; ++i) {
+        fact[i] = fact[i - 1] * i;
+    }
+
+    // Available elements (sorted)
+    vector<int> available;
+    for (int i = 0; i < n; ++i) available.push_back(i);
+
+    vector<int> perm;
+    for (int i = n - 1; i >= 0; --i) {
+        // Determine which available element goes to this position
+        int idx = rank / fact[i];
+        rank %= fact[i];
+        perm.push_back(available[idx]);
+        available.erase(available.begin() + idx);
+    }
+    return perm;
+}
+```
+
 ## 6. Math
 
 ### Euler Totient Function
@@ -588,6 +625,77 @@ int Phi(int x) {
     }
     if (x > 1) ret -= ret / x;
     return ret;
+}
+```
+
+### Modular Power (Fast Exponentiation)
+> **Description:** Computes $a^b \pmod{p}$ efficiently using binary exponentiation (repeated squaring).
+> **Time Complexity:** $O(\log b)$
+> **Space Complexity:** $O(1)$
+> **Usage:** Core building block for number theory problems involving large exponents under a modulus.
+
+```cpp
+// Computes a^b mod p
+long long modpow(long long a, long long b, long long p) {
+    long long res = 1;
+    a %= p;
+    while (b > 0) {
+        if (b & 1) res = res * a % p;
+        a = a * a % p;
+        b >>= 1;
+    }
+    return res;
+}
+```
+
+### Modular Inverse
+> **Description:** 
+> In the world of remainders modulo $p$ (where $p$ is a prime number), we cannot use division or fractions directly. 
+> By using Fermat's Little Theorem, the calculated "Output ($a^{p-2}$)" acts as a perfect substitute for $a$. 
+> It allows us to turn a difficult division problem into a simple multiplication problem:
+> 
+> $$ x \div a \equiv x \times a^{p-2} \pmod{p} $$
+> **Time Complexity:** $O(\log p)$
+> **Space Complexity:** $O(1)$
+> **Requires:** `modpow` function above.
+
+```cpp
+// Computes a^{-1} mod p (p must be prime)
+long long modInverse(long long a, long long p) {
+    return modpow(a, p - 2, p);
+}
+```
+
+### Combinations Modulo p (nCr mod p)
+> **Description:** Precomputes factorials and inverse factorials to answer $\binom{n}{r} \pmod{p}$ queries in $O(1)$ each after $O(N)$ preprocessing.
+> **Time Complexity:** $O(N)$ precomputation, $O(1)$ per query.
+> **Space Complexity:** $O(N)$
+> **Requires:** `modpow` and `modInverse` functions above.
+
+```cpp
+#include <vector>
+using namespace std;
+
+const int MAXN = 1e6 + 5;
+const long long MOD = 1e9 + 7;
+
+vector<long long> fact(MAXN), inv_fact(MAXN);
+
+void precompute(int n) {
+    fact[0] = 1;
+    for (int i = 1; i <= n; ++i) {
+        fact[i] = fact[i - 1] * i % MOD;
+    }
+    inv_fact[n] = modInverse(fact[n], MOD);
+    for (int i = n - 1; i >= 0; --i) {
+        inv_fact[i] = inv_fact[i + 1] * (i + 1) % MOD;
+    }
+}
+
+// Returns C(n, r) mod MOD
+long long C(int n, int r) {
+    if (r < 0 || r > n) return 0;
+    return fact[n] % MOD * inv_fact[r] % MOD * inv_fact[n - r] % MOD;
 }
 ```
 
@@ -789,6 +897,319 @@ long long kruskal(int n, vector<Edge>& edges, vector<Edge>& mstEdges) {
 }
 ```
 
+### Cycle Detection
+> **Description:** General utility to check if a directed or undirected graph contains any cycles using DFS with a recursion stack (directed) or a visited-parent check (undirected).
+> **Time Complexity:** $O(V + E)$
+> **Space Complexity:** $O(V)$
+
+```cpp
+#include <vector>
+using namespace std;
+
+// Directed graph cycle detection via DFS
+struct CycleDetector {
+    int n;
+    vector<vector<int>> adj;
+    vector<int> color; // 0 = unvisited, 1 = in-stack, 2 = done
+
+    CycleDetector(int n) : n(n), adj(n), color(n, 0) {}
+
+    void addEdge(int u, int v) { adj[u].push_back(v); }
+
+    bool dfs(int u) {
+        color[u] = 1;
+        for (int v : adj[u]) {
+            if (color[v] == 1) return true;  // Back edge -> cycle
+            if (color[v] == 0 && dfs(v)) return true;
+        }
+        color[u] = 2;
+        return false;
+    }
+
+    // Returns true if a cycle exists in the directed graph
+    bool hasCycle() {
+        for (int i = 0; i < n; ++i) {
+            if (color[i] == 0 && dfs(i)) return true;
+        }
+        return false;
+    }
+};
+
+int main() {
+    CycleDetector graph(4);
+    // Add edges
+    graph.addEdge(0, 1);
+    graph.addEdge(1, 2);
+    graph.addEdge(2, 0); // Cycle 0 -> 1 -> 2 -> 0
+    graph.addEdge(2, 3);
+
+    if (graph.hasCycle()) {
+        cout << "Graph contains a cycle!" << endl;
+    } else {
+        cout << "Graph does not contain a cycle." << endl;
+    }
+
+    return 0;
+}
+```
+
+### Topological Sort (Kahn's Algorithm)
+> **Description:** Implements Topological Sort for a Directed Acyclic Graph (DAG) using Kahn's BFS-based algorithm (in-degree approach).
+> **Time Complexity:** $O(V + E)$
+> **Space Complexity:** $O(V + E)$
+> **Usage:** Returns vertices in topological order. If the result size < $V$, a cycle exists.
+
+```cpp
+#include <vector>
+#include <queue>
+using namespace std;
+
+// Returns topological order of vertices 0..n-1, or empty vector if cycle detected
+vector<int> topoSort(int n, vector<vector<int>>& adj) {
+    vector<int> indegree(n, 0);
+    for (int u = 0; u < n; ++u)
+        for (int v : adj[u]) indegree[v]++;
+
+    queue<int> q;
+    for (int i = 0; i < n; ++i)
+        if (indegree[i] == 0) q.push(i);
+
+    vector<int> order;
+    while (!q.empty()) {
+        int u = q.front(); q.pop();
+        order.push_back(u);
+        for (int v : adj[u]) {
+            if (--indegree[v] == 0) q.push(v);
+        }
+    }
+    return (int)order.size() == n ? order : vector<int>{}; // empty if cycle
+}
+
+int main() {
+    int n = 4;
+    vector<vector<int>> adj(n);
+
+    // Add edges: 0 -> 1, 0 -> 2, 1 -> 3, 2 -> 3
+    adj[0].push_back(1);
+    adj[0].push_back(2);
+    adj[1].push_back(3);
+    adj[2].push_back(3);
+
+    vector<int> result = topoSort(n, adj);
+
+    if (result.empty()) {
+        cout << "Graph contains a cycle (No valid topological order)." << endl;
+    } else {
+        cout << "Topological Sort Order: ";
+        for (int u : result) {
+            cout << u << " ";
+        }
+        cout << endl;
+    }
+
+    return 0;
+}
+```
+
+### Strongly Connected Components (Tarjan's Algorithm)
+> **Description:** Finds all Strongly Connected Components (SCCs) in a directed graph using Tarjan's single-pass DFS algorithm.
+> **Time Complexity:** $O(V + E)$
+> **Space Complexity:** $O(V)$
+> **Usage:** Each SCC is a maximal set of vertices mutually reachable from each other.
+
+```cpp
+#include <vector>
+#include <stack>
+using namespace std;
+
+struct Tarjan {
+    int n, timer = 0;
+    vector<vector<int>> adj;
+    vector<int> disc, low, comp;
+    vector<bool> onStack;
+    stack<int> st;
+    int sccCount = 0;
+
+    Tarjan(int n) : n(n), adj(n), disc(n, -1), low(n), comp(n, -1), onStack(n, false) {}
+
+    void addEdge(int u, int v) { adj[u].push_back(v); }
+
+    void dfs(int u) {
+        disc[u] = low[u] = timer++;
+        st.push(u);
+        onStack[u] = true;
+        for (int v : adj[u]) {
+            if (disc[v] == -1) {
+                dfs(v);
+                low[u] = min(low[u], low[v]);
+            } else if (onStack[v]) {
+                low[u] = min(low[u], disc[v]);
+            }
+        }
+        if (low[u] == disc[u]) {
+            while (true) {
+                int v = st.top(); st.pop();
+                onStack[v] = false;
+                comp[v] = sccCount;
+                if (v == u) break;
+            }
+            sccCount++;
+        }
+    }
+
+    // Returns comp[i] = SCC id of vertex i (0-indexed)
+    int solve() {
+        for (int i = 0; i < n; ++i)
+            if (disc[i] == -1) dfs(i);
+        return sccCount;
+    }
+};
+
+int main() {
+    // Graph: 0 -> 1 -> 2 -> 0 (one SCC), 2 -> 3 (3 is its own SCC)
+    Tarjan tj(4);
+    tj.addEdge(0, 1);
+    tj.addEdge(1, 2);
+    tj.addEdge(2, 0); // Cycle: forms SCC {0, 1, 2}
+    tj.addEdge(2, 3); // 3 has no back edge, forms SCC {3}
+
+    int numSCC = tj.solve();
+    cout << "Number of SCCs: " << numSCC << endl; // 2
+
+    // Print SCC id of each vertex
+    for (int i = 0; i < 4; ++i) {
+        cout << "Node " << i << " -> SCC " << tj.comp[i] << endl;
+    }
+    // Node 0, 1, 2 share the same SCC id; Node 3 has a different id
+
+    return 0;
+}
+```
+
+### Disjoint Set Union (DSU / Union-Find)
+> **Description:** A standalone, highly reusable DSU class supporting path compression and union by rank/size. Efficiently manages disjoint sets for connectivity queries.
+> **Time Complexity:** $O(\alpha(N))$ per operation (nearly $O(1)$ amortized), where $\alpha$ is the inverse Ackermann function.
+> **Space Complexity:** $O(N)$
+> **Usage:** Cycle detection, Kruskal's MST, connected components, etc.
+
+```cpp
+#include <vector>
+using namespace std;
+
+struct DSU {
+    vector<int> parent, sz;
+
+    DSU(int n) : parent(n + 1), sz(n + 1, 1) {
+        for (int i = 0; i <= n; ++i) parent[i] = i;
+    }
+
+    int find(int x) {
+        if (parent[x] != x) parent[x] = find(parent[x]); // Path compression
+        return parent[x];
+    }
+
+    // Returns true if x and y were in different sets (successfully merged)
+    bool unite(int x, int y) {
+        x = find(x); y = find(y);
+        if (x == y) return false;
+        if (sz[x] < sz[y]) swap(x, y); // Union by size
+        parent[y] = x;
+        sz[x] += sz[y];
+        return true;
+    }
+
+    bool connected(int x, int y) { return find(x) == find(y); }
+};
+
+int main() {
+    DSU dsu(5);
+    dsu.unite(0, 1);
+    dsu.unite(1, 2);
+    dsu.unite(3, 4);
+
+    cout << dsu.connected(0, 2) << endl; // 1 (true: 0-1-2 are in the same set)
+    cout << dsu.connected(0, 3) << endl; // 0 (false: {0,1,2} and {3,4} are separate)
+
+    dsu.unite(2, 3);
+    cout << dsu.connected(0, 4) << endl; // 1 (true: all merged now)
+
+    return 0;
+}
+```
+
+### Lowest Common Ancestor (Binary Lifting)
+> **Description:** Preprocesses a rooted tree to answer LCA queries in $O(\log N)$ using binary lifting. Stores $2^k$-th ancestors for each node.
+> **Time Complexity:** $O(N \log N)$ preprocessing, $O(\log N)$ per query.
+> **Space Complexity:** $O(N \log N)$
+> **Usage:** LCA of two nodes in a rooted tree; commonly used in path queries and tree DP.
+
+```cpp
+#include <vector>
+using namespace std;
+
+const int MAXLOG = 18; // Supports up to 2^18 = 262144 nodes
+
+struct LCA {
+    int n, LOG;
+    vector<int> depth;
+    vector<vector<int>> up; // up[v][k] = 2^k-th ancestor of v
+    vector<vector<int>> adj;
+
+    LCA(int n) : n(n), LOG(MAXLOG), depth(n + 1, 0), up(n + 1, vector<int>(MAXLOG, 0)), adj(n + 1) {}
+
+    void addEdge(int u, int v) {
+        adj[u].push_back(v);
+        adj[v].push_back(u);
+    }
+
+    void dfs(int u, int p) {
+        up[u][0] = p;
+        for (int k = 1; k < LOG; ++k)
+            up[u][k] = up[up[u][k - 1]][k - 1];
+        for (int v : adj[u]) {
+            if (v != p) {
+                depth[v] = depth[u] + 1;
+                dfs(v, u);
+            }
+        }
+    }
+
+    void build(int root = 1) { dfs(root, root); }
+
+    int query(int u, int v) {
+        if (depth[u] < depth[v]) swap(u, v);
+        int diff = depth[u] - depth[v];
+        for (int k = 0; k < LOG; ++k)
+            if ((diff >> k) & 1) u = up[u][k];
+        if (u == v) return u;
+        for (int k = LOG - 1; k >= 0; --k)
+            if (up[u][k] != up[v][k]) { u = up[u][k]; v = up[v][k]; }
+        return up[u][0];
+    }
+};
+
+int main() {
+    // Tree structure (1-indexed):
+    //       1
+    //      / \
+    //     2   3
+    //    / \
+    //   4   5
+    LCA lca(5);
+    lca.addEdge(1, 2);
+    lca.addEdge(1, 3);
+    lca.addEdge(2, 4);
+    lca.addEdge(2, 5);
+    lca.build(1); // Root at node 1
+
+    cout << lca.query(4, 5) << endl; // 2 (LCA of 4 and 5 is 2)
+    cout << lca.query(4, 3) << endl; // 1 (LCA of 4 and 3 is 1)
+    cout << lca.query(2, 4) << endl; // 2 (LCA of 2 and 4 is 2)
+
+    return 0;
+}
+```
+
 ### Bipartite Matching (Hungarian Algorithm)
 
 > Finds the maximum matching in a bipartite graph.
@@ -861,5 +1282,95 @@ int getLIS(const std::vector<int>& nums) {
         }
     }
     return v.size();
+}
+```
+
+## 10. Advanced Data Structures
+
+### Segment Tree with Lazy Propagation
+> **Description:** A robust Segment Tree supporting both **range updates** and **range queries** (e.g., Range Sum or Range Max) using lazy propagation to defer updates efficiently.
+> **Time Complexity:** $O(\log N)$ per update and query.
+> **Space Complexity:** $O(N)$
+> **Usage:** Ideal when both range updates and range queries are required simultaneously.
+
+```cpp
+#include <vector>
+using namespace std;
+
+// Segment Tree with Lazy Propagation (Range Add, Range Sum)
+struct SegTree {
+    int n;
+    vector<long long> tree, lazy;
+
+    SegTree(int n) : n(n), tree(4 * n, 0), lazy(4 * n, 0) {}
+
+    void build(vector<int>& a, int node, int start, int end) {
+        if (start == end) {
+            tree[node] = a[start];
+        } else {
+            int mid = (start + end) / 2;
+            build(a, 2 * node, start, mid);
+            build(a, 2 * node + 1, mid + 1, end);
+            tree[node] = tree[2 * node] + tree[2 * node + 1];
+        }
+    }
+
+    void pushDown(int node, int start, int end) {
+        if (lazy[node] != 0) {
+            int mid = (start + end) / 2;
+            tree[2 * node]     += lazy[node] * (mid - start + 1);
+            tree[2 * node + 1] += lazy[node] * (end - mid);
+            lazy[2 * node]     += lazy[node];
+            lazy[2 * node + 1] += lazy[node];
+            lazy[node] = 0;
+        }
+    }
+
+    // Range update: add val to all elements in [l, r]
+    void update(int node, int start, int end, int l, int r, long long val) {
+        if (r < start || end < l) return;
+        if (l <= start && end <= r) {
+            tree[node] += val * (end - start + 1);
+            lazy[node] += val;
+            return;
+        }
+        pushDown(node, start, end);
+        int mid = (start + end) / 2;
+        update(2 * node, start, mid, l, r, val);
+        update(2 * node + 1, mid + 1, end, l, r, val);
+        tree[node] = tree[2 * node] + tree[2 * node + 1];
+    }
+
+    // Range query: sum of elements in [l, r]
+    long long query(int node, int start, int end, int l, int r) {
+        if (r < start || end < l) return 0;
+        if (l <= start && end <= r) return tree[node];
+        pushDown(node, start, end);
+        int mid = (start + end) / 2;
+        return query(2 * node, start, mid, l, r) +
+               query(2 * node + 1, mid + 1, end, l, r);
+    }
+
+    // Convenience wrappers (1-indexed)
+    void update(int l, int r, long long val) { update(1, 1, n, l, r, val); }
+    long long query(int l, int r) { return query(1, 1, n, l, r); }
+};
+
+int main() {
+    // Array: [1, 2, 3, 4, 5] (1-indexed)
+    vector<int> a = {0, 1, 2, 3, 4, 5}; // a[0] unused
+    SegTree st(5);
+    st.build(a, 1, 1, 5);
+
+    cout << st.query(1, 5) << endl; // 15 (sum of all)
+    cout << st.query(2, 4) << endl; // 9  (sum of a[2..4] = 2+3+4)
+
+    st.update(2, 4, 10); // Add 10 to each element in [2, 4]
+    // Array is now: [1, 12, 13, 14, 5]
+
+    cout << st.query(1, 5) << endl; // 45 (15 + 10*3)
+    cout << st.query(2, 4) << endl; // 39 (12+13+14)
+
+    return 0;
 }
 ```
