@@ -1,3 +1,12 @@
+% Chinese font and automatic line breaking (XeLaTeX).
+\newfontfamily\codebookChineseFont{Microsoft JhengHei}
+\codebookChineseFont
+\makeatletter
+\edef\familydefault{\f@family}
+\makeatother
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip=0pt plus 1pt
+
 \usepackage{tcolorbox}
 \tcbuselibrary{breakable} % Load breakable library to allow code blocks to span across pages
 \usepackage{fvextra}      % Use fvextra (extension of fancyvrb) for advanced verbatim features including line breaking
